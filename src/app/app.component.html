@@ -1,8 +1,9 @@
+<app-header (menu)="menuClicked($event)"></app-header>
 <div class="container">
   <div class="row">
     <div class="col-md-12">
-      <h3>Hello I am in the AppComponent</h3>
-      <hr>
+      <app-recipes *ngIf="menu==='recipe'"></app-recipes>
+      <app-shopping-list *ngIf="menu==='shopping'"></app-shopping-list>
     </div>
   </div>
 </div>
