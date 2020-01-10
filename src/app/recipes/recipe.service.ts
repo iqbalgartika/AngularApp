@@ -8,8 +8,6 @@ export class RecipeService {
 
   constructor(private shoppingListService: ShoppingListService) {}
 
-  recipeSelected = new EventEmitter<Recipe>();
-
   private recipes: Recipe[] = [
     new Recipe(1, 'Recipe1', 'Test Recipe desc 1', 'https://cdn.pixabay.com/photo/2016/06/15/19/09/food-1459693_960_720.jpg',
       [
