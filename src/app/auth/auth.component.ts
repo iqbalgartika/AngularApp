@@ -1,21 +1,25 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ComponentFactoryResolver, ViewChild, OnDestroy } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 import { AuthService, AuthResponseData } from './auth.service';
+import { AlertComponent } from '../shared/alert/alert.component';
+import { PlaceholderDirective } from '../shared/placeholder.directive';
 
 @Component({
   selector: 'app-auth',
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.css']
 })
-export class AuthComponent implements OnInit {
+export class AuthComponent implements OnInit, OnDestroy {
   isLoginMode = true;
   isLoading = false;
   error: string = null;
+  @ViewChild(PlaceholderDirective, {static: true}) alertHost: PlaceholderDirective;
+  private closeAlertSub: Subscription;
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(private authService: AuthService, private router: Router, private cmpFacResolver: ComponentFactoryResolver) { }
 
   ngOnInit() {
   }
@@ -49,10 +53,33 @@ export class AuthComponent implements OnInit {
       }, 
       errorMessage => {
         this.error = errorMessage;
+        this.showErrorAlert(errorMessage);
         this.isLoading = false;
       } 
     );
     form.reset();
   }
 
+  onCloseAlert() {
+    this.error = null;
+  }
+
+  private showErrorAlert(message: string) {
+    const alertCmpFactory = this.cmpFacResolver.resolveComponentFactory(AlertComponent);
+
+    const hostViewContainerRef = this.alertHost.viewContainerRef;
+    hostViewContainerRef.clear();
+    const alertCmpRef = hostViewContainerRef.createComponent(alertCmpFactory);
+    alertCmpRef.instance.message = message;
+    this.closeAlertSub = alertCmpRef.instance.close.subscribe(() => {
+      this.closeAlertSub.unsubscribe();
+      hostViewContainerRef.clear();
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.closeAlertSub) {
+      this.closeAlertSub.unsubscribe();
+    }
+  }
 }
