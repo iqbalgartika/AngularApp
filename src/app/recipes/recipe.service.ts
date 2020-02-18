@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { Store } from '@ngrx/store';
 
 import { Ingredient } from '../shared/ingredient.model';
-import * as ShoppingListAction from '../shopping-list/store/shopping-list.action'
+import * as ShoppingListAction from '../shopping-list/store/shopping-list.actions'
 import * as fromShoppingList from '../shopping-list/store/shopping-list.reducer'
 
 @Injectable()
