@@ -1,14 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { FormGroup, FormControl, Validators, FormArray } from '@angular/forms';
-import { RecipeService } from '../recipe.service';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 
-import { Recipe } from '../recipe.model';
-import { Ingredient } from 'src/app/shared/ingredient.model';
 import { AppState } from 'src/app/store/app.reducer';
+import * as RecipeActions from '../store/recipe.actions'
 
 @Component({
   selector: 'app-recipe-edit',
@@ -18,7 +16,7 @@ import { AppState } from 'src/app/store/app.reducer';
 export class RecipeEditComponent implements OnInit, OnDestroy {
   recipeForm: FormGroup;
   recipeSubscription: Subscription;
-  // recipe: Recipe = null;
+  storeSub: Subscription;
   id: number;
   editMode = false;
 
@@ -26,7 +24,7 @@ export class RecipeEditComponent implements OnInit, OnDestroy {
     return (this.recipeForm.get('ingredients') as FormArray).controls;
   }
 
-  constructor(private route: ActivatedRoute, private recipeService: RecipeService, private router: Router, private store: Store<AppState>) { }
+  constructor(private route: ActivatedRoute, private router: Router, private store: Store<AppState>) { }
 
   ngOnInit() {
     this.recipeSubscription = this.route.params.subscribe(
@@ -45,7 +43,7 @@ export class RecipeEditComponent implements OnInit, OnDestroy {
     let recipeIngredients = new FormArray([]);
 
     if (this.editMode) {
-      this.store.select('recipe').pipe(map(
+      this.storeSub = this.store.select('recipe').pipe(map(
         recipeState => {
           return recipeState.recipes.find((recipe, index) => {
             return index === this.id;
@@ -77,15 +75,21 @@ export class RecipeEditComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.recipeSubscription.unsubscribe();
+    if (this.storeSub) {
+      this.storeSub.unsubscribe();
+    }
   }
 
   onSubmit() {
     // const recipe = new Recipe(this.recipeForm.value['name'], this.recipeForm.value['description'], this.recipeForm.value['imageUrl'], this.recipeForm.value['ingredients']);
     if (this.editMode) {
-      this.recipeService.updateRecipe(this.id, this.recipeForm.value);
+      this.store.dispatch(new RecipeActions.UpdateRecipe({ index: this.id, recipe: this.recipeForm.value}));
+      
+      // this.recipeService.updateRecipe(this.id, this.recipeForm.value);
     }
     else {
-      this.recipeService.addRecipe(this.recipeForm.value);
+      this.store.dispatch(new RecipeActions.AddRecipe(this.recipeForm.value));
+      // this.recipeService.addRecipe(this.recipeForm.value);
     }
     this.onCancel();
   }
